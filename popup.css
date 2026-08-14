@@ -1,11 +1,11 @@
 /* KEEPTIME PREMIUM DESIGN SYSTEM */
 :root {
-    --bg-main: #f8fafc;        /* slate-50 */
+    --bg-main: #faf8ff;        /* soft lavender-white */
     --bg-card: #ffffff;
-    --bg-input: #f1f5f9;       /* slate-100 */
-    --border-color: #e2e8f0;   /* slate-200 */
-    --text-main: #0f172a;      /* slate-900 */
-    --text-muted: #64748b;     /* slate-500 */
+    --bg-input: #f3f0ff;       /* light lavender-gray */
+    --border-color: #e9e4ff;   /* soft lavender border */
+    --text-main: #0f172a;
+    --text-muted: #64748b;
     
     --accent-indigo: #7c3aed;  /* violet-600 */
     --accent-indigo-hover: #6d28d9; /* violet-700 */
@@ -29,12 +29,12 @@
 }
 
 body.dark {
-    --bg-main: #020617;        /* slate-950 */
-    --bg-card: #0f172a;        /* slate-900 */
-    --bg-input: #1e293b;       /* slate-800 */
-    --border-color: #1e293b;   /* slate-800 */
-    --text-main: #f8fafc;      /* slate-50 */
-    --text-muted: #94a3b8;     /* slate-400 */
+    --bg-main: #0b0914;        /* deep purple-black */
+    --bg-card: #131124;        /* deep amethyst-card */
+    --bg-input: #1e1b38;       /* purple-gray input */
+    --border-color: #242044;   /* purple-gray border */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
     
     --accent-indigo: #a78bfa;  /* violet-400 */
     --accent-indigo-hover: #8b5cf6; /* violet-500 */
