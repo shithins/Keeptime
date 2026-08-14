@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keeptime - BYOD Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body class="dark"> <!-- Default to dark mode, dynamically toggled -->
+
+    <div class="app-container">
+
+        <!-- --- SCREEN 1: SETUP --- -->
+        <div id="setup-screen" class="screen active animate-fade">
+            <div class="header-bar">
+                <button class="btn-icon btn-theme-toggle" title="Toggle Theme">
+                    <!-- Sun icon -->
+                    <svg class="icon theme-icon-sun" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <!-- Moon icon -->
+                    <svg class="icon theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+            
+            <div class="scrollable-content" style="display: flex; flex-direction: column;">
+                <div class="logo-container" style="margin-bottom: 16px;">
+                    <!-- Clock icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h1 class="setup-title">Keeptime Setup</h1>
+                
+                <!-- Role Toggle Tabs -->
+                <div class="setup-tabs">
+                    <button id="tab-employee" class="setup-tab active">Join Workspace</button>
+                    <button id="tab-admin" class="setup-tab">Register Company</button>
+                </div>
+
+                <!-- --- Employee Join View --- -->
+                <div id="setup-employee-block" class="setup-content-block">
+                    <p class="setup-subtitle" style="margin-bottom: 16px;">Enter the invite link or code shared by your company administrator.</p>
+                    <form id="employee-setup-form" autocomplete="off">
+                        <div id="employee-setup-error" class="error-box" style="display:none;"></div>
+                        <div class="form-group">
+                            <label class="form-label" for="invite-code">Invitation Code / Link</label>
+                            <input type="text" id="invite-code" class="form-input" placeholder="Paste code or invite URL..." required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top: 16px;">
+                            Join Workspace
+                        </button>
+                    </form>
+                </div>
+
+                <!-- --- Admin Register View --- -->
+                <div id="setup-admin-block" class="setup-content-block" style="display:none;">
+                    <p class="setup-subtitle" style="margin-bottom: 12px;">Create and host your attendance database in 4 quick steps.</p>
+                    
+                    <ol class="setup-instructions">
+                        <li>Create a new **blank Google Sheet** in your Google Drive.</li>
+                        <li>Open **Extensions > Apps Script** in your sheet.</li>
+                        <li style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+                            <span>Paste the code from `google-apps-script.js`.</span>
+                            <button id="btn-copy-script" type="button" class="btn-primary" style="padding: 4px 8px; font-size: 9px; width: auto; min-width: 80px; margin-top: 0; white-space: nowrap; height: 22px; border-radius: 4px;">
+                                Copy Script
+                            </button>
+                        </li>
+                        <li>Click **Deploy > New deployment**, select **Web app**, set Execute as **Me**, and Access to **Anyone**.</li>
+                        <li>Deploy, copy the Web App URL, and paste it below.</li>
+                    </ol>
+
+                    <form id="admin-setup-form" autocomplete="off">
+                        <div id="admin-setup-error" class="error-box" style="display:none;"></div>
+                        <div class="form-group">
+                            <label class="form-label" for="script-url">Web App URL (Database Gateway)</label>
+                            <input type="url" id="script-url" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top: 12px;">
+                            Link Database
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- SCREEN 2: LOGIN --- -->
+        <div id="login-screen" class="screen animate-fade">
+            <div class="header-bar">
+                <button id="btn-back-setup" class="btn-icon" title="Go Back">
+                    <!-- ChevronLeft icon -->
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="btn-icon btn-theme-toggle" title="Toggle Theme">
+                    <svg class="icon theme-icon-sun" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+            
+            <div class="scrollable-content">
+                <div class="workspace-tag">
+                    <!-- Briefcase icon -->
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    <span id="login-workspace-name">Loading Workspace...</span>
+                </div>
+                <h2 class="login-title">Sign In</h2>
+                
+                <form id="login-form" autocomplete="off">
+                    <div id="login-error" class="error-box" style="display:none;"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="employee-email">Work Email</label>
+                        <input type="email" id="employee-email" class="form-input" placeholder="john@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="employee-password">Password</label>
+                        <input type="password" id="employee-password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 24px;">
+                        Access Workspace
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- --- SCREEN 3: TRACKER --- -->
+        <div id="tracker-screen" class="screen tracker-content animate-fade">
+            <div class="header-bar">
+                <div class="profile-section">
+                    <div id="profile-avatar" class="profile-avatar">U</div>
+                    <div>
+                        <h3 id="employee-name" class="profile-name">User Name</h3>
+                        <p id="employee-badge" class="profile-batch">Batch A</p>
+                    </div>
+                </div>
+                <div class="sync-status-group">
+                    <button class="btn-icon btn-theme-toggle" title="Toggle Theme" style="padding: 4px;">
+                        <svg class="icon theme-icon-sun" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <!-- Settings Gear button -->
+                    <button id="btn-settings-gear" class="btn-icon" title="Workspace Settings" style="padding: 4px;">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                    <!-- Logout button -->
+                    <button id="btn-logout" class="btn-icon" title="Logout / Sign Out" style="padding: 4px; color: var(--accent-rose);">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                    <!-- Sync Indicator states -->
+                    <div id="sync-container">
+                        <!-- Wifi (Connected) -->
+                        <svg id="sync-icon-synced" class="icon sync-icon-emerald" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Connected & Synced"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 10a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                        <!-- WifiOff (Offline) -->
+                        <svg id="sync-icon-offline" class="icon sync-icon-rose" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Offline - Saving Locally"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 13"/><path d="M5 13a10.94 10.94 0 0 1 5.83-2.84"/><path d="M12 12A15 15 0 0 1 22 10"/><path d="M1.05 10A15 15 0 0 1 8 8"/><path d="M12 20h.01"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/></svg>
+                        <!-- Spinner (Syncing) -->
+                        <div id="sync-spinner" class="spinner" style="display:none;" title="Syncing to Sheet..."></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scrollable-content" style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+                
+                <!-- Holiday warning banner (hidden by default) -->
+                <div id="warning-banner" class="warning-banner" style="display:none;">
+                    <!-- AlertTriangle icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                        <h4 class="warning-title">Non-Working Day</h4>
+                        <p class="warning-desc">Time tracked today will require Admin approval.</p>
+                    </div>
+                </div>
+
+                <!-- Timer display -->
+                <div class="timer-container">
+                    <div id="timer-display" class="timer-value stopped">00:00:00</div>
+                    <div id="break-badge" class="break-badge" style="display:none;">
+                        <!-- Coffee icon -->
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                        <span>On Break</span>
+                    </div>
+                </div>
+
+                <!-- Progress tracking -->
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>Progress</span>
+                        <span id="target-display">0h / 8h Target</span>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="tracker-actions">
+                    <button id="btn-start" class="btn-primary btn-start">
+                        <!-- Play icon -->
+                        <svg class="icon" style="fill:currentColor;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Start Shift</span>
+                    </button>
+                    <div id="active-actions" class="action-grid" style="display:none;">
+                        <button id="btn-break" class="btn-action-outline">
+                            <!-- Coffee / Play icon -->
+                            <span id="break-icon-wrapper" style="display: flex; align-items: center; justify-content: center;">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                            </span>
+                            <span id="break-btn-text">Take Break</span>
+                        </button>
+                        <button id="btn-stop" class="btn-stop">
+                            <!-- Square icon -->
+                            <svg class="icon" style="fill:currentColor;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+                            <span>Stop Shift</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <div class="bottom-nav">
+                <button id="nav-tracker" class="nav-item active">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Tracker</span>
+                </button>
+                <button id="nav-leave" class="nav-item">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Leaves</span>
+                </button>
+                <button id="nav-report" class="nav-item">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Report</span>
+                </button>
+                <button id="nav-team" class="nav-item" style="display:none;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Team</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- --- SCREEN 4: LEAVE REQUEST --- -->
+        <div id="leave-screen" class="screen animate-fade">
+            <div class="header-bar">
+                <button id="btn-back-tracker-leave" class="btn-icon" title="Back to Tracker">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h2 class="header-title">Request Leave</h2>
+                <div style="width: 32px;"></div> <!-- Spacer to center title -->
+            </div>
+
+            <!-- Main Form Content -->
+            <div id="leave-form-content" class="scrollable-content">
+                <!-- Available Balance Widget -->
+                <div class="balance-widget">
+                    <div>
+                        <p class="balance-title">Available Balance</p>
+                        <p class="balance-desc">Casual & Sick Leaves</p>
+                    </div>
+                    <div class="balance-value">
+                        12<span>days</span>
+                    </div>
+                </div>
+
+                <form id="leave-form" autocomplete="off">
+                    <div id="leave-error" class="error-box" style="display:none;"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="leave-date">Date</label>
+                        <input type="date" id="leave-date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="leave-type">Leave Type</label>
+                        <select id="leave-type" class="form-select">
+                            <option value="Casual">Casual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="LWP">Loss of Pay (LWP)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="leave-amount">Duration</label>
+                        <select id="leave-amount" class="form-select">
+                            <option value="Full">Full Day</option>
+                            <option value="Half">Half Day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="leave-reason">Reason</label>
+                        <textarea id="leave-reason" class="form-textarea" placeholder="Briefly explain your reason..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-submit-action" style="margin-top: 16px;">
+                        Submit Request
+                    </button>
+                </form>
+            </div>
+
+            <!-- Success State Content (hidden by default) -->
+            <div id="leave-success-content" class="success-state" style="display:none;">
+                <div class="success-icon-container">
+                    <!-- CheckCircle icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <h3 class="success-title">Request Sent</h3>
+                <p class="success-desc">Your leave has been sent to the Admin for approval.</p>
+            </div>
+        </div>
+
+        <!-- --- SCREEN 5: REPORTS (TIMESHEET) --- -->
+        <div id="report-screen" class="screen animate-fade">
+            <div class="header-bar">
+                <button id="btn-back-tracker-report" class="btn-icon" title="Back to Tracker">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h2 class="header-title">My Timesheet</h2>
+                <div style="width: 32px;"></div> <!-- Spacer to center title -->
+            </div>
+
+            <div class="scrollable-content">
+                <!-- Summary cards -->
+                <div class="reports-summary">
+                    <div class="summary-card">
+                        <p class="summary-label">This Week</p>
+                        <p id="summary-hours-week" class="summary-value">32h 15m</p>
+                        <p class="summary-note success">On Track (40h)</p>
+                    </div>
+                    <div class="summary-card">
+                        <p class="summary-label">Leaves Taken</p>
+                        <p id="summary-leaves-month" class="summary-value">2 Days</p>
+                        <p class="summary-note muted">This month</p>
+                    </div>
+                </div>
+
+                <!-- Recent Logs List -->
+                <h3 class="logs-title">Recent Logs</h3>
+                <div id="logs-list" class="logs-list">
+                    <!-- Log items loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- --- SCREEN 6: TEAM MANAGEMENT (Tutors/Managers/Admins) --- -->
+        <div id="team-screen" class="screen animate-fade">
+            <div class="header-bar">
+                <button id="btn-back-tracker-team" class="btn-icon" title="Back to Tracker">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h2 class="header-title">Team Management</h2>
+                <div style="width: 32px;"></div>
+            </div>
+
+            <div class="scrollable-content">
+                <h3 class="logs-title">Pending Leave Requests</h3>
+                
+                <div id="team-leaves-empty" class="success-state" style="padding: 20px; display: none;">
+                    <p class="success-desc">No pending leave requests found.</p>
+                </div>
+                
+                <div id="team-leaves-list" class="logs-list" style="margin-top: 10px;">
+                    <!-- Dynamic team leave cards loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- --- SETTINGS PANEL / MODAL (Toggled by Gear Icon) --- -->
+        <div id="settings-panel" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <h3 class="modal-title">Workspace Settings</h3>
+                <p class="modal-text">You are currently connected to this Google Apps Script API gateway:</p>
+                
+                <div class="modal-info-card">
+                    <span class="modal-info-label">API Endpoint</span>
+                    <div id="settings-api-url" class="modal-info-value">https://script.google.com/...</div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="btn-open-dashboard" class="btn-secondary" style="gap: 8px;">
+                        <!-- FileText icon -->
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Open Admin Dashboard</span>
+                    </button>
+                    <button id="btn-copy-invite" class="btn-primary" style="background-color: var(--accent-indigo);">
+                        <!-- Share icon -->
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                        <span id="btn-copy-invite-text">Copy Invitation Link</span>
+                    </button>
+                    <button id="btn-disconnect" class="btn-danger">Disconnect Workspace</button>
+                    <button id="btn-close-settings" class="btn-secondary">Close Settings</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
