@@ -1,15 +1,15 @@
 /* KEEPTIME PREMIUM DESIGN SYSTEM */
 :root {
-    --bg-main: #faf8ff;        /* soft lavender-white */
-    --bg-card: #ffffff;
-    --bg-input: #f3f0ff;       /* light lavender-gray */
-    --border-color: #e9e4ff;   /* soft lavender border */
-    --text-main: #0f172a;
-    --text-muted: #64748b;
+    --bg-main: #f3f4f6;        /* clean Talento light gray */
+    --bg-card: #ffffff;        /* pure white card */
+    --bg-input: #ffffff;       /* clean input background */
+    --border-color: #e5e7eb;   /* slate-200 border */
+    --text-main: #111827;      /* slate-900 text */
+    --text-muted: #6b7280;     /* slate-500 text */
     
-    --accent-indigo: #7c3aed;  /* violet-600 */
-    --accent-indigo-hover: #6d28d9; /* violet-700 */
-    --accent-indigo-light: #f5f3ff; /* violet-50 */
+    --accent-indigo: #5b56f6;  /* exact Talento royal purple */
+    --accent-indigo-hover: #4c47df; /* hovering royal purple */
+    --accent-indigo-light: #eef2ff; /* purple-indigo-50 badge background */
     
     --accent-emerald: #10b981; /* emerald-500 */
     --accent-emerald-hover: #059669; /* emerald-600 */
@@ -29,16 +29,16 @@
 }
 
 body.dark {
-    --bg-main: #1e1330;        /* distinct dark plum */
-    --bg-card: #2a1b42;        /* deep grape card */
-    --bg-input: #24183a;       /* plum-gray input */
-    --border-color: #3d2a5c;   /* soft purple border */
-    --text-main: #f8fafc;
-    --text-muted: #c084fc;     /* vibrant lavender text-muted */
+    --bg-main: #1e1b4b;        /* rich Talento deep royal indigo */
+    --bg-card: #2e2a72;        /* matching indigo card background */
+    --bg-input: #242159;       /* soft indigo input */
+    --border-color: #3f3b8a;   /* soft royal border */
+    --text-main: #ffffff;
+    --text-muted: #c7d2fe;     /* light lavender text */
     
-    --accent-indigo: #c084fc;  /* bright violet-400 */
-    --accent-indigo-hover: #a855f7; /* violet-500 */
-    --accent-indigo-light: rgba(192, 132, 252, 0.15);
+    --accent-indigo: #a5b4fc;  /* bright indigo-300 */
+    --accent-indigo-hover: #818cf8; /* indigo-400 */
+    --accent-indigo-light: rgba(165, 180, 252, 0.15);
     
     --accent-emerald: #10b981; /* emerald-500 */
     --accent-emerald-hover: #059669; /* emerald-600 */
