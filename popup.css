@@ -7,9 +7,9 @@
     --text-main: #0f172a;      /* slate-900 */
     --text-muted: #64748b;     /* slate-500 */
     
-    --accent-indigo: #4f46e5;  /* indigo-600 */
-    --accent-indigo-hover: #4338ca; /* indigo-700 */
-    --accent-indigo-light: #e0e7ff; /* indigo-100 */
+    --accent-indigo: #7c3aed;  /* violet-600 */
+    --accent-indigo-hover: #6d28d9; /* violet-700 */
+    --accent-indigo-light: #f5f3ff; /* violet-50 */
     
     --accent-emerald: #10b981; /* emerald-500 */
     --accent-emerald-hover: #059669; /* emerald-600 */
@@ -36,9 +36,9 @@ body.dark {
     --text-main: #f8fafc;      /* slate-50 */
     --text-muted: #94a3b8;     /* slate-400 */
     
-    --accent-indigo: #6366f1;  /* indigo-500 */
-    --accent-indigo-hover: #4f46e5; /* indigo-600 */
-    --accent-indigo-light: rgba(99, 102, 241, 0.1);
+    --accent-indigo: #a78bfa;  /* violet-400 */
+    --accent-indigo-hover: #8b5cf6; /* violet-500 */
+    --accent-indigo-light: rgba(167, 139, 250, 0.1);
     
     --accent-emerald: #10b981; /* emerald-500 */
     --accent-emerald-hover: #059669; /* emerald-600 */
@@ -274,12 +274,12 @@ body {
 .logo-container {
     width: 48px;
     height: 48px;
-    background-color: #4f46e5;
+    background-color: var(--accent-indigo);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    box-shadow: 0 4px 14px var(--accent-indigo-light);
     margin-bottom: 24px;
 }
 

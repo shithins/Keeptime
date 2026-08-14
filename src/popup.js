@@ -73,6 +73,7 @@ const leaveDateInput = document.getElementById('leave-date');
 const leaveTypeSelect = document.getElementById('leave-type');
 const leaveAmountSelect = document.getElementById('leave-amount');
 const leaveReasonInput = document.getElementById('leave-reason');
+const leaveRmInput = document.getElementById('leave-rm');
 const leaveError = document.getElementById('leave-error');
 
 // Reports Screen
@@ -103,13 +104,6 @@ let totalBreakTime = 0;
 let accumulatedTime = 0;
 let userTargetHoursStr = '8h 00m';
 let userRole = 'EMPLOYEE';
-
-// Dummy Logs for Reports Screen
-const defaultLogs = [
-    { date: 'Yesterday', hours: '8h 05m', status: 'Completed', type: 'completed' },
-    { date: 'Mon, Jun 29', hours: '7h 50m', status: 'Completed', type: 'completed' },
-    { date: 'Fri, Jun 26', hours: '0h 00m', status: 'Sick Leave', type: 'leave' }
-];
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -678,9 +672,14 @@ leaveForm.addEventListener('submit', async (e) => {
     const leaveType = leaveTypeSelect.value;
     const dayAmount = leaveAmountSelect.value;
     const reason = leaveReasonInput.value.trim();
+    const rmName = leaveRmInput.value.trim();
 
     if (!reason) {
         showLeaveError("Please enter a reason.");
+        return;
+    }
+    if (!rmName) {
+        showLeaveError("Please enter your Reporting Manager's name.");
         return;
     }
 
@@ -698,6 +697,7 @@ leaveForm.addEventListener('submit', async (e) => {
             leaveType: leaveType,
             dayAmount: dayAmount,
             reason: reason,
+            rmName: rmName,
             date: date
         }
     }, (response) => {
@@ -713,6 +713,7 @@ leaveForm.addEventListener('submit', async (e) => {
                 // Clear inputs
                 leaveDateInput.value = '';
                 leaveReasonInput.value = '';
+                leaveRmInput.value = '';
                 leaveFormContent.style.display = 'block';
                 leaveSuccessContent.style.display = 'none';
                 showScreen('tracker');
@@ -1018,10 +1019,18 @@ function getCoordinates() {
 }
 
 async function populateReportsScreen() {
-    const data = await chrome.storage.local.get(['accumulatedTime', 'startTime', 'totalBreakTime', 'currentStatus', 'targetHours']);
+    const data = await chrome.storage.local.get([
+        'currentStatus',
+        'startTime',
+        'accumulatedTime',
+        'totalBreakTime',
+        'apiGatewayUrl',
+        'email'
+    ]);
+    
     if (!logsList) return;
     
-    logsList.innerHTML = '';
+    logsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 16px;">Loading timesheet data...</div>';
     
     let todayMs = parseInt(data.accumulatedTime || '0');
     if (data.currentStatus === 'WORKING' && data.startTime) {
@@ -1036,7 +1045,39 @@ async function populateReportsScreen() {
     const todayHoursStr = `${todayHrs}h ${todayMins.toString().padStart(2, '0')}m`;
     const todayStatus = data.currentStatus === 'WORKING' ? 'Active' : 'Completed';
     const todayType = data.currentStatus === 'WORKING' ? 'active' : 'completed';
+
+    let remoteLogs = [];
+    let remoteWeekHours = 0.0;
+    let leavesCount = 0;
+
+    if (data.apiGatewayUrl && data.email) {
+        try {
+            const response = await fetch(data.apiGatewayUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'getUserReport',
+                    email: data.email
+                })
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (result && result.success) {
+                    remoteLogs = result.logs || [];
+                    remoteWeekHours = parseFloat(result.weekHours || 0);
+                    leavesCount = result.leavesCount || 0;
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load user reports from server:", err);
+        }
+    }
+
+    // Clear loading placeholder
+    logsList.innerHTML = '';
     
+    // 1. Render today's active session
     if (data.currentStatus === 'WORKING' || todayMs > 0) {
         const todayItem = document.createElement('div');
         todayItem.className = 'log-item animate-fade';
@@ -1050,23 +1091,35 @@ async function populateReportsScreen() {
         logsList.appendChild(todayItem);
     }
     
-    defaultLogs.forEach(log => {
-        const logItem = document.createElement('div');
-        logItem.className = 'log-item animate-fade';
-        logItem.innerHTML = `
-            <div>
-                <p class="log-date">${log.date}</p>
-                <p class="log-status ${log.type}">${log.status}</p>
-            </div>
-            <div class="log-value">${log.hours}</div>
-        `;
-        logsList.appendChild(logItem);
-    });
+    // 2. Render historical logs from database
+    if (remoteLogs.length > 0) {
+        remoteLogs.forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item animate-fade';
+            logItem.innerHTML = `
+                <div>
+                    <p class="log-date">${log.date}</p>
+                    <p class="log-status ${log.type}">${log.status}</p>
+                </div>
+                <div class="log-value">${log.hours || '-'}</div>
+            `;
+            logsList.appendChild(logItem);
+        });
+    } else if (todayMs === 0) {
+        logsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 24px;">No log records found.</div>';
+    }
     
-    const weekHoursTotal = 32.25 + (todaySeconds / 3600);
+    // 3. Update week summary hours
+    const liveSessionHours = (data.currentStatus === 'WORKING' || todayMs > 0) ? (todaySeconds / 3600) : 0;
+    const weekHoursTotal = remoteWeekHours + liveSessionHours;
     const wH = Math.floor(weekHoursTotal);
     const wM = Math.floor((weekHoursTotal - wH) * 60);
     summaryHoursWeek.innerText = `${wH}h ${wM.toString().padStart(2, '0')}m`;
+
+    // 4. Update monthly leaves counter
+    if (summaryLeavesMonth) {
+        summaryLeavesMonth.innerText = `${leavesCount} Day${leavesCount === 1 ? '' : 's'}`;
+    }
 }
 
 function showAdminSetupError(msg) {

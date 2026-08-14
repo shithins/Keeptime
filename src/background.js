@@ -1,7 +1,7 @@
 // Keeptime Background Script (Service Worker)
 
-// Configure Chrome Idle detection (60 seconds)
-chrome.idle.setDetectionInterval(60);
+// Configure Chrome Idle detection (120 seconds)
+chrome.idle.setDetectionInterval(120);
 
 // Keep track of active synchronization to prevent overlapping sync loops
 let isSyncing = false;
@@ -207,6 +207,7 @@ async function submitLeaveRequest(payload) {
                 leaveType: payload.leaveType,
                 dayAmount: payload.dayAmount,
                 reason: payload.reason,
+                rmName: payload.rmName,
                 date: payload.date
             })
         });

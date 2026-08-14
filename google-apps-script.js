@@ -110,8 +110,9 @@ function doPost(e) {
       var leaveType = payload.leaveType; // e.g. "Sick", "Casual"
       var dayAmount = payload.dayAmount; // e.g. "Full", "Half"
       var reason = payload.reason || "";
+      var rmName = payload.rmName || "";
 
-      inboxSheet.appendRow([date, name, email, leaveType, dayAmount, reason, "⏳ Pending Review"]);
+      inboxSheet.appendRow([date, name, email, leaveType, dayAmount, reason, rmName, "⏳ Pending Review"]);
       responseData = { success: true };
     } 
     
@@ -151,7 +152,7 @@ function doPost(e) {
       if (inboxSheet) {
         var inboxData = inboxSheet.getDataRange().getValues();
         for (var j = 1; j < inboxData.length; j++) {
-          var status = inboxData[j][6] ? inboxData[j][6].toString().toUpperCase().trim() : "";
+          var status = inboxData[j][7] ? inboxData[j][7].toString().toUpperCase().trim() : "";
           if (status.indexOf("PENDING") !== -1 || status === "") {
             var applicantEmail = inboxData[j][2] ? inboxData[j][2].toString().toLowerCase().trim() : "";
             var applicantBatch = userBatchMap[applicantEmail] || "";
@@ -174,7 +175,8 @@ function doPost(e) {
                 type: inboxData[j][3],
                 amount: inboxData[j][4],
                 reason: inboxData[j][5],
-                status: inboxData[j][6]
+                rmName: inboxData[j][6],
+                status: inboxData[j][7]
               });
             }
           }
@@ -230,7 +232,7 @@ function doPost(e) {
         }
       }
 
-      inboxSheet.getRange(rowId, 7).setValue(newStatus);
+      inboxSheet.getRange(rowId, 8).setValue(newStatus);
       responseData = { success: true };
     }
 
@@ -294,7 +296,7 @@ function doPost(e) {
       if (inboxSheet) {
         var inboxData = inboxSheet.getDataRange().getValues();
         for (var k = 1; k < inboxData.length; k++) {
-          var status = inboxData[k][6] ? inboxData[k][6].toString().toUpperCase().trim() : "";
+          var status = inboxData[k][7] ? inboxData[k][7].toString().toUpperCase().trim() : "";
           if (status.indexOf("PENDING") !== -1 || status === "") {
             pendingLeaves.push({
               rowId: k + 1,
@@ -304,7 +306,8 @@ function doPost(e) {
               type: inboxData[k][3],
               amount: inboxData[k][4],
               reason: inboxData[k][5],
-              status: inboxData[k][6]
+              rmName: inboxData[k][6],
+              status: inboxData[k][7]
             });
           }
         }
@@ -317,6 +320,102 @@ function doPost(e) {
         leaves: pendingLeaves,
         companyName: getCompanyName(),
         spreadsheetUrl: ss.getUrl()
+      };
+    }
+
+    // Action 9: Get User Report Details (For Reports Screen)
+    else if (action === "getUserReport") {
+      var logsSheet = ss.getSheetByName(TABS.RAW_LOGS);
+      var userLogs = [];
+      var weekHours = 0.0;
+      
+      if (logsSheet) {
+        var logsData = logsSheet.getDataRange().getValues();
+        var rawUserLogs = [];
+        for (var i = 1; i < logsData.length; i++) {
+          if (logsData[i][1] && logsData[i][1].toString().toLowerCase().trim() === email.toLowerCase().trim()) {
+            rawUserLogs.push({
+              timestamp: logsData[i][0],
+              type: logsData[i][2],
+              note: logsData[i][4]
+            });
+          }
+        }
+        
+        var limit = Math.min(rawUserLogs.length, 10);
+        for (var j = rawUserLogs.length - 1; j >= rawUserLogs.length - limit; j--) {
+          if (j >= 0) {
+            var punchType = rawUserLogs[j].type.toString().toUpperCase();
+            var punchStatus = "Completed";
+            if (punchType === "START" || punchType === "RESUME") punchStatus = "Active";
+            if (punchType === "BREAK") punchStatus = "On Break";
+            
+            userLogs.push({
+              date: rawUserLogs[j].timestamp ? getFormattedDate(new Date(rawUserLogs[j].timestamp), "GMT") : "",
+              type: punchType.toLowerCase(),
+              status: punchStatus,
+              hours: rawUserLogs[j].note || ""
+            });
+          }
+        }
+
+        var now = new Date();
+        var startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        var weekMs = 0;
+        var tempStart = null;
+        
+        var weekLogs = rawUserLogs.filter(function(log) {
+          var logDate = new Date(log.timestamp);
+          return logDate >= startOfWeek;
+        });
+
+        weekLogs.sort(function(a, b) {
+          return new Date(a.timestamp) - new Date(b.timestamp);
+        });
+
+        for (var k = 0; k < weekLogs.length; k++) {
+          var log = weekLogs[k];
+          if (log.type === "START" || log.type === "RESUME") {
+            tempStart = new Date(log.timestamp);
+          } else if ((log.type === "BREAK" || log.type === "STOP") && tempStart) {
+            weekMs += (new Date(log.timestamp) - tempStart);
+            tempStart = null;
+          }
+        }
+        if (tempStart) {
+          weekMs += (new Date() - tempStart);
+        }
+        weekHours = weekMs / 3600000.0;
+      }
+
+      var leavesCount = 0;
+      var inboxSheet = ss.getSheetByName(TABS.LEAVE_INBOX);
+      if (inboxSheet) {
+        var inboxData = inboxSheet.getDataRange().getValues();
+        var currentMonth = new Date().getMonth();
+        var currentYear = new Date().getFullYear();
+        for (var l = 1; l < inboxData.length; l++) {
+          var applicantEmail = inboxData[l][2] ? inboxData[l][2].toString().toLowerCase().trim() : "";
+          if (applicantEmail === email.toLowerCase().trim() && inboxData[l][0]) {
+            var reqDate = new Date(inboxData[l][0]);
+            if (reqDate.getMonth() === currentMonth && reqDate.getFullYear() === currentYear) {
+              var status = inboxData[l][7] ? inboxData[l][7].toString().toUpperCase().trim() : "";
+              if (status.indexOf("APPROVED") !== -1) {
+                var amount = parseFloat(inboxData[l][4] || 1);
+                leavesCount += amount;
+              }
+            }
+          }
+        }
+      }
+
+      responseData = {
+        success: true,
+        logs: userLogs,
+        weekHours: weekHours,
+        leavesCount: leavesCount
       };
     }
 
@@ -572,9 +671,7 @@ function runMidnightAuditor() {
     
     // Audit Logic
     if (isExceptionDay) {
-      // Weekend or Holiday exception logic
       if (totalWorkedMs > 0) {
-        // Log "Worked on Holiday" exception
         var hoursWorked = (totalWorkedMs / (1000 * 60 * 60)).toFixed(2);
         inboxSheet.appendRow([
           todayStr, 
@@ -583,14 +680,13 @@ function runMidnightAuditor() {
           "SYSTEM", 
           "Extra", 
           "SYSTEM FLAG: Worked " + hoursWorked + "h on Holiday (" + (isHoliday ? "Company Holiday" : "Weekend") + ")",
+          "", 
           "⏳ Pending Review"
         ]);
         Logger.log("Exception Logged: " + emp.email + " worked on non-working day.");
       }
     } else {
-      // Normal working day logic
       if (userLogs.length === 0) {
-        // ghost / no-show
         inboxSheet.appendRow([
           todayStr, 
           emp.name, 
@@ -598,17 +694,16 @@ function runMidnightAuditor() {
           "SYSTEM", 
           "Full", 
           "SYSTEM FLAG: No-Show / Did not clock in",
+          "", 
           "⏳ Pending Review"
         ]);
         Logger.log("No-Show Logged: " + emp.email);
       } else {
-        // Evaluate worked hours vs target hours
         var workedRatio = totalWorkedMs / targetMs;
         var workedHours = (totalWorkedMs / (1000 * 60 * 60)).toFixed(2);
         var targetHours = (targetMs / (1000 * 60 * 60)).toFixed(2);
         
         if (workedRatio < 0.5) {
-          // Less than 50% -> Full Day leave flag
           inboxSheet.appendRow([
             todayStr, 
             emp.name, 
@@ -616,11 +711,11 @@ function runMidnightAuditor() {
             "SYSTEM", 
             "Full", 
             "SYSTEM FLAG: Shortfall (Worked " + workedHours + "h of " + targetHours + "h)",
+            "", 
             "⏳ Pending Review"
           ]);
           Logger.log("Shortfall (Full Leave) Logged: " + emp.email);
         } else if (workedRatio >= 0.5 && workedRatio < 1.0) {
-          // 50% - 99% -> Half Day leave flag
           inboxSheet.appendRow([
             todayStr, 
             emp.name, 
@@ -628,11 +723,11 @@ function runMidnightAuditor() {
             "SYSTEM", 
             "Half", 
             "SYSTEM FLAG: Shortfall (Worked " + workedHours + "h of " + targetHours + "h)",
+            "", 
             "⏳ Pending Review"
           ]);
           Logger.log("Shortfall (Half Leave) Logged: " + emp.email);
         } else {
-          // Met or exceeded target
           Logger.log("Attendance Cleared: " + emp.email + " worked " + workedHours + "h.");
         }
       }
@@ -744,7 +839,7 @@ function initializeDatabase(ss) {
   
   ensureSheet(TABS.DIRECTORY, ["Employee ID", "Name", "Email", "Batch", "Target Hours", "Role"]);
   ensureSheet(TABS.RAW_LOGS, ["Timestamp", "Email", "Event Type", "Latitude", "Longitude", "Note", "Synced At"]);
-  ensureSheet(TABS.LEAVE_INBOX, ["Timestamp", "Email", "Date", "Type", "Amount", "Reason", "Status"]);
+  ensureSheet(TABS.LEAVE_INBOX, ["Timestamp", "Email", "Date", "Type", "Amount", "Reason", "RM Name", "Status"]);
   
   // Settings sheet
   var settingsSheet = ss.getSheetByName(TABS.SETTINGS);

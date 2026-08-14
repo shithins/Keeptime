@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableLeaves.innerHTML = '';
 
         if (dbLeaves.length === 0) {
-            tableLeaves.innerHTML = `<tr><td colspan="5" class="empty-state">No pending leave requests found.</td></tr>`;
+            tableLeaves.innerHTML = `<tr><td colspan="6" class="empty-state">No pending leave requests found.</td></tr>`;
             return;
         }
 
@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="badge resume">${leave.type}</span><br>
                     <span style="font-size:0.75rem;color:var(--text-muted);">${leave.amount} Day Request</span>
                 </td>
+                <td><strong>${leave.rmName || 'N/A'}</strong></td>
                 <td style="color:var(--text-muted); font-style:italic;">"${leave.reason}"</td>
                 <td>
                     <div style="display:flex;gap:6px;">
