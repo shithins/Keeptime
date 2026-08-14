@@ -29,16 +29,16 @@
 }
 
 body.dark {
-    --bg-main: #0b0914;        /* deep purple-black */
-    --bg-card: #131124;        /* deep amethyst-card */
-    --bg-input: #1e1b38;       /* purple-gray input */
-    --border-color: #242044;   /* purple-gray border */
+    --bg-main: #1e1330;        /* distinct dark plum */
+    --bg-card: #2a1b42;        /* deep grape card */
+    --bg-input: #24183a;       /* plum-gray input */
+    --border-color: #3d2a5c;   /* soft purple border */
     --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --text-muted: #c084fc;     /* vibrant lavender text-muted */
     
-    --accent-indigo: #a78bfa;  /* violet-400 */
-    --accent-indigo-hover: #8b5cf6; /* violet-500 */
-    --accent-indigo-light: rgba(167, 139, 250, 0.1);
+    --accent-indigo: #c084fc;  /* bright violet-400 */
+    --accent-indigo-hover: #a855f7; /* violet-500 */
+    --accent-indigo-light: rgba(192, 132, 252, 0.15);
     
     --accent-emerald: #10b981; /* emerald-500 */
     --accent-emerald-hover: #059669; /* emerald-600 */
